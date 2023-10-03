@@ -12,9 +12,11 @@
             import * as THREE from "three";
 
             // サイズを指定
+
             const width = 1920;
             const height = 1080;
             let rot = 0;
+            let mouseX = 0;
 
             // レンダラーを作成
             const renderer = new THREE.WebGLRenderer({
@@ -50,13 +52,18 @@
 
             tick();
 
+            document.addEventListener("mousemove", (e) => {
+                mouseX = e.pageX;
+            });
+
             // 毎フレーム時に実行されるループイベントです
             function tick() {
                 // メッシュを回転させる
-                rot += 0.5;
+                const targetRot = (mouseX / window.innerWidth) * 360;
+                rot += (targetRot - rot) * 0.02;
                 const radian = (rot * Math.PI) / 100;
-                camera.position.x = 1000 * Math.sin(radian);
-                camera.position.z = 1000 * Math.cos(radian);
+                camera.position.x = 1000 * Math.sin(-radian);
+                camera.position.z = 1000 * Math.cos(-radian);
                 camera.lookAt(new THREE.Vector3(0, 0, 0));
                 // レンダリング
                 renderer.render(scene, camera);
