@@ -16,6 +16,7 @@
             import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
             const canvasElement = document.querySelector("#myCanvas");
+            const mouse = new THREE.Vector2();
 
             const renderer = new THREE.WebGLRenderer({
                 canvas: canvasElement, // レンダラーにcanvasを指定
@@ -23,7 +24,7 @@
             });
 
             const scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x000000, 0.001);
+            scene.fog = new THREE.FogExp2(0x000000, 0.0015);
 
             const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight);
             camera.position.set(0, 0, 1000);
@@ -36,8 +37,9 @@
             scene.add(group);
 
             const geometry = new THREE.BoxGeometry(30, 30, 30);
-            const material = new THREE.MeshStandardMaterial({ wireframe: true });
+            const material = new THREE.MeshStandardMaterial({ wireframe: false });
 
+            const meshList = [];
             for (let i = 0; i < 10000; i++) {
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.position.x = (Math.random() - 0.5) * 2000;
@@ -47,12 +49,25 @@
                 mesh.rotation.y = Math.random() * 2 * Math.PI;
                 mesh.rotation.z = Math.random() * 2 * Math.PI;
                 group.add(mesh);
+                meshList.push(mesh);
             }
 
-            scene.add(new THREE.DirectionalLight(0xff0000, 2)); // 平行光源
-            scene.add(new THREE.AmbientLight(0x00ffff)); // 環境光源
+            scene.add(new THREE.DirectionalLight(0xff00ff, 0.5)); // 平行光源
+
+            const raycaster = new THREE.Raycaster();
+            const mouseNormalized = new THREE.Vector2();
 
             const tick = () => {
+                raycaster.setFromCamera(mouseNormalized, camera);
+                const intersects = raycaster.intersectObjects(meshList);
+
+                meshList.forEach((mesh) => {
+                    if (intersects.length > 0 && mesh == intersects[0].object) {
+                        mesh.material.wireframe = true;
+                    } else {
+                        mesh.material.wireframe = false;
+                    }
+                });
                 group.rotateY(0.001);
                 group.rotateX(0.001);
                 controls.update();
@@ -66,7 +81,20 @@
                 renderer.setSize(window.innerWidth, window.innerHeight);
             };
 
+            const onMouseMove = (e) => {
+                const element = e.currentTarget;
+                const rect = element.getBoundingClientRect();
+
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                mouseNormalized.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouseNormalized.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            };
+
             window.addEventListener("resize", onResize);
+            canvasElement.addEventListener("mousemove", onMouseMove);
+
             onResize();
             tick();
         </script>
