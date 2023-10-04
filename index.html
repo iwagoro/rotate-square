@@ -1,11 +1,13 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
         <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script type="importmap">
             {
                 "imports": {
                     "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
-                    "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+                    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.152.2/examples/jsm/controls/OrbitControls.js"
                 }
             }
         </script>
@@ -13,28 +15,20 @@
             import * as THREE from "three";
             import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-            const width = 1920;
-            const height = 1080;
-
             const canvasElement = document.querySelector("#myCanvas");
 
             const renderer = new THREE.WebGLRenderer({
-                canvas: canvasElement,
+                canvas: canvasElement, // レンダラーにcanvasを指定
                 antialias: true,
-                devicePixelRatio: window.devicePixelRatio,
             });
 
-            renderer.setSize(width, height);
-
             const scene = new THREE.Scene();
-
             scene.fog = new THREE.FogExp2(0x000000, 0.001);
 
-            const camera = new THREE.PerspectiveCamera(45, width / height);
-
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight);
             camera.position.set(0, 0, 1000);
 
-            const controls = new OrbitControls(camera, canvasElement);
+            const controls = new OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.1;
 
@@ -52,7 +46,6 @@
                 mesh.rotation.x = Math.random() * 2 * Math.PI;
                 mesh.rotation.y = Math.random() * 2 * Math.PI;
                 mesh.rotation.z = Math.random() * 2 * Math.PI;
-                // グループに格納する
                 group.add(mesh);
             }
 
@@ -67,8 +60,22 @@
                 requestAnimationFrame(tick);
             };
 
+            const onResize = () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            };
+
+            window.addEventListener("resize", onResize);
+            onResize();
             tick();
         </script>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+        </style>
     </head>
     <body>
         <canvas id="myCanvas"></canvas>
