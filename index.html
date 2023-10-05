@@ -52,9 +52,10 @@
 
             const controls = new OrbitControls(camera, canvasElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.02;
+            controls.dampingFactor = 0.1;
 
             const tick = () => {
+                controls.update();
                 renderer.render(scene, camera);
                 requestAnimationFrame(tick);
             };
