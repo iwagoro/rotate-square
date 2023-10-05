@@ -4,16 +4,29 @@
         <script type="importmap">
             {
                 "imports": {
-                    "three": "https://unpkg.com/three@0.152.2/build/three.module.js"
+                    "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
                 }
             }
         </script>
         <script type="module">
             import * as THREE from "three";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-            class Box extends THREE.Mesh {
+            class MyGroup extends THREE.Group {
                 constructor() {
-                    super(new THREE.BoxGeometry(400, 400, 400), new THREE.MeshNormalMaterial());
+                    super();
+
+                    const length = 10;
+                    for (let i = 0; i < length; i++) {
+                        const material = new THREE.MeshStandardMaterial({ emissive: 0xffffff });
+                        const geometry = new THREE.BoxGeometry(30, 30, 30);
+                        const mesh = new THREE.Mesh(geometry, material);
+
+                        const radian = (i / length) * Math.PI * 2;
+                        mesh.position.set(200 * Math.cos(radian), 0, 200 * Math.sin(radian));
+                        this.add(mesh);
+                    }
                 }
             }
 
@@ -22,8 +35,9 @@
             const height = 1080;
 
             // レンダラーを作成
+            const canvasElement = document.querySelector("#myCanvas");
             const renderer = new THREE.WebGLRenderer({
-                canvas: document.querySelector("#myCanvas"),
+                canvas: canvasElement,
             });
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setSize(width, height);
@@ -36,16 +50,17 @@
             camera.position.set(0, 0, +1000);
 
             // 箱を作成
-            const box = new Box();
-            scene.add(box);
+            const group = new MyGroup();
+            scene.add(group);
+
+            const controls = new OrbitControls(camera, canvasElement);
 
             tick();
 
             // 毎フレーム時に実行されるループイベントです
             function tick() {
-                box.rotation.y += 0.01;
+                group.rotation.y += 0.1;
                 renderer.render(scene, camera); // レンダリング
-
                 requestAnimationFrame(tick);
             }
         </script>
