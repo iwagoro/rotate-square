@@ -1,52 +1,68 @@
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.152.2/build/three.module.js"
-        }
-      }
-    </script>
-    <script type="module">
-      import * as THREE from "three";
+    <head>
+        <meta charset="utf-8" />
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/",
+                    "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from "three";
+            import * as BufferGeometryUtils from "three/addons/utils/BufferGeometryUtils.js";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-      // サイズを指定
-      const width = 960;
-      const height = 540;
+            const width = 1920;
+            const height = 1080;
+            const canvasElement = document.querySelector("#myCanvas");
+            const renderer = new THREE.WebGLRenderer({ canvas: canvasElement });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height);
 
-      // レンダラーを作成
-      const renderer = new THREE.WebGLRenderer({
-        canvas: document.querySelector("#myCanvas"),
-      });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(width, height);
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 0, 10);
 
-      // シーンを作成
-      const scene = new THREE.Scene();
+            const CELL_NUM = 20;
+            const boxes = [];
 
-      // カメラを作成
-      const camera = new THREE.PerspectiveCamera(45, width / height);
-      camera.position.set(0, 0, +1000);
+            for (let i = 0; i < CELL_NUM; i++) {
+                for (let j = 0; j < CELL_NUM; j++) {
+                    for (let k = 0; k < CELL_NUM; k++) {
+                        const geometryBox = new THREE.BoxGeometry(1, 1, 1);
+                        const x = 3 * (i - CELL_NUM / 2);
+                        const y = 3 * (j - CELL_NUM / 2);
+                        const z = 3 * (k - CELL_NUM / 2);
 
-      // 箱を作成
-      const geometry = new THREE.BoxGeometry(400, 400, 400);
-      const material = new THREE.MeshNormalMaterial();
-      const box = new THREE.Mesh(geometry, material);
-      scene.add(box);
+                        const geometryTranslated = geometryBox.translate(x, y, z);
 
-      tick();
+                        boxes.push(geometryTranslated);
+                    }
+                }
+            }
 
-      // 毎フレーム時に実行されるループイベントです
-      function tick() {
-        box.rotation.y += 0.01;
-        renderer.render(scene, camera); // レンダリング
+            const geometry = BufferGeometryUtils.mergeBufferGeometries(boxes);
+            const material = new THREE.MeshNormalMaterial({ wireframe: true });
+            const mesh = new THREE.Mesh(geometry, material);
 
-        requestAnimationFrame(tick);
-      }
-    </script>
-  </head>
-  <body>
-    <canvas id="myCanvas"></canvas>
-  </body>
+            scene.add(mesh);
+
+            const controls = new OrbitControls(camera, canvasElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.02;
+
+            const tick = () => {
+                renderer.render(scene, camera);
+                requestAnimationFrame(tick);
+            };
+
+            tick();
+        </script>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+    </body>
 </html>
