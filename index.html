@@ -1,52 +1,111 @@
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.152.2/build/three.module.js"
-        }
-      }
-    </script>
-    <script type="module">
-      import * as THREE from "three";
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+                    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.152.2/examples/jsm/controls/OrbitControls.js"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from "three";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-      // サイズを指定
-      const width = 960;
-      const height = 540;
+            const canvasElement = document.querySelector("#myCanvas");
+            const mouse = new THREE.Vector2();
 
-      // レンダラーを作成
-      const renderer = new THREE.WebGLRenderer({
-        canvas: document.querySelector("#myCanvas"),
-      });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(width, height);
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvasElement, // レンダラーにcanvasを指定
+                antialias: true,
+            });
 
-      // シーンを作成
-      const scene = new THREE.Scene();
+            const scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.0015);
 
-      // カメラを作成
-      const camera = new THREE.PerspectiveCamera(45, width / height);
-      camera.position.set(0, 0, +1000);
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight);
+            camera.position.set(0, 0, 1000);
 
-      // 箱を作成
-      const geometry = new THREE.BoxGeometry(400, 400, 400);
-      const material = new THREE.MeshNormalMaterial();
-      const box = new THREE.Mesh(geometry, material);
-      scene.add(box);
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
 
-      tick();
+            const group = new THREE.Group();
+            scene.add(group);
 
-      // 毎フレーム時に実行されるループイベントです
-      function tick() {
-        box.rotation.y += 0.01;
-        renderer.render(scene, camera); // レンダリング
+            const geometry = new THREE.BoxGeometry(30, 30, 30);
+            const material = new THREE.MeshStandardMaterial({ wireframe: false });
 
-        requestAnimationFrame(tick);
-      }
-    </script>
-  </head>
-  <body>
-    <canvas id="myCanvas"></canvas>
-  </body>
+            const meshList = [];
+            for (let i = 0; i < 10000; i++) {
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.x = (Math.random() - 0.5) * 2000;
+                mesh.position.y = (Math.random() - 0.5) * 2000;
+                mesh.position.z = (Math.random() - 0.5) * 2000;
+                mesh.rotation.x = Math.random() * 2 * Math.PI;
+                mesh.rotation.y = Math.random() * 2 * Math.PI;
+                mesh.rotation.z = Math.random() * 2 * Math.PI;
+                group.add(mesh);
+                meshList.push(mesh);
+            }
+
+            scene.add(new THREE.DirectionalLight(0xff00ff, 0.5)); // 平行光源
+
+            const raycaster = new THREE.Raycaster();
+            const mouseNormalized = new THREE.Vector2();
+
+            const tick = () => {
+                raycaster.setFromCamera(mouseNormalized, camera);
+                const intersects = raycaster.intersectObjects(meshList);
+
+                meshList.forEach((mesh) => {
+                    if (intersects.length > 0 && mesh == intersects[0].object) {
+                        mesh.material.wireframe = true;
+                    } else {
+                        mesh.material.wireframe = false;
+                    }
+                });
+                group.rotateY(0.001);
+                group.rotateX(0.001);
+                controls.update();
+                renderer.render(scene, camera);
+                requestAnimationFrame(tick);
+            };
+
+            const onResize = () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            };
+
+            const onMouseMove = (e) => {
+                const element = e.currentTarget;
+                const rect = element.getBoundingClientRect();
+
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+                mouseNormalized.x = (e.clientX / window.innerWidth) * 2 - 1;
+                mouseNormalized.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            };
+
+            window.addEventListener("resize", onResize);
+            canvasElement.addEventListener("mousemove", onMouseMove);
+
+            onResize();
+            tick();
+        </script>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+    </body>
 </html>
