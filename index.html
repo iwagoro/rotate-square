@@ -1,52 +1,71 @@
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.152.2/build/three.module.js"
-        }
-      }
-    </script>
-    <script type="module">
-      import * as THREE from "three";
+    <head>
+        <meta charset="utf-8" />
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "https://unpkg.com/three@0.152.2/build/three.module.js",
+                    "three/addons/": "https://unpkg.com/three@0.152.2/examples/jsm/"
+                }
+            }
+        </script>
+        <script type="module">
+            import * as THREE from "three";
+            import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-      // サイズを指定
-      const width = 960;
-      const height = 540;
+            class MyGroup extends THREE.Group {
+                constructor() {
+                    super();
 
-      // レンダラーを作成
-      const renderer = new THREE.WebGLRenderer({
-        canvas: document.querySelector("#myCanvas"),
-      });
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.setSize(width, height);
+                    const length = 10;
+                    for (let i = 0; i < length; i++) {
+                        const material = new THREE.MeshStandardMaterial({ emissive: 0xffffff });
+                        const geometry = new THREE.BoxGeometry(30, 30, 30);
+                        const mesh = new THREE.Mesh(geometry, material);
 
-      // シーンを作成
-      const scene = new THREE.Scene();
+                        const radian = (i / length) * Math.PI * 2;
+                        mesh.position.set(200 * Math.cos(radian), 0, 200 * Math.sin(radian));
+                        this.add(mesh);
+                    }
+                }
+            }
 
-      // カメラを作成
-      const camera = new THREE.PerspectiveCamera(45, width / height);
-      camera.position.set(0, 0, +1000);
+            // サイズを指定
+            const width = 1920;
+            const height = 1080;
 
-      // 箱を作成
-      const geometry = new THREE.BoxGeometry(400, 400, 400);
-      const material = new THREE.MeshNormalMaterial();
-      const box = new THREE.Mesh(geometry, material);
-      scene.add(box);
+            // レンダラーを作成
+            const canvasElement = document.querySelector("#myCanvas");
+            const renderer = new THREE.WebGLRenderer({
+                canvas: canvasElement,
+            });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(width, height);
 
-      tick();
+            // シーンを作成
+            const scene = new THREE.Scene();
 
-      // 毎フレーム時に実行されるループイベントです
-      function tick() {
-        box.rotation.y += 0.01;
-        renderer.render(scene, camera); // レンダリング
+            // カメラを作成
+            const camera = new THREE.PerspectiveCamera(45, width / height);
+            camera.position.set(0, 0, +1000);
 
-        requestAnimationFrame(tick);
-      }
-    </script>
-  </head>
-  <body>
-    <canvas id="myCanvas"></canvas>
-  </body>
+            // 箱を作成
+            const group = new MyGroup();
+            scene.add(group);
+
+            const controls = new OrbitControls(camera, canvasElement);
+
+            tick();
+
+            // 毎フレーム時に実行されるループイベントです
+            function tick() {
+                group.rotation.y += 0.1;
+                renderer.render(scene, camera); // レンダリング
+                requestAnimationFrame(tick);
+            }
+        </script>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+    </body>
 </html>
